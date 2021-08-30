@@ -1,5 +1,4 @@
-## EBSH \- Extremly Bad Shell
-
+## RSH \- Little shell writed in Python
 Commands:
 - exit
 - ls
