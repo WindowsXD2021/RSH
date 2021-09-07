@@ -2,11 +2,14 @@ __name__ = "RSH"
 
 
 import base64
+import datetime
 import getpass
 import hashlib
 import os
 import subprocess
 import sys
+import time
+import psutil
 import threading
 from typing import List, NoReturn, Optional
 
@@ -123,10 +126,9 @@ def breaked_shell():
 
 
 history = []
-ps_path = r"c:\users\mama\downloads\portablegit\usr\bin\ps.exe"
 lock = threading._RLock()
-cmds = ["", "editor", "exit", "ls", "echo", "cd", "clear", "mkdir", "editor", "rm", "write-file", "lock", "cat", "psmgr",
-"cmpf", "hash", "base64", "type", "kill", "tree", "breaked-shell", "history", "pwd"]
+cmds = ["", "editor", "exit", "ls", "echo", "cd", "clear", "mkdir", "rm", "write-file", "lock", "cat", "psmgr",
+"cmpf", "hash", "base64", "type", "kill", "tree", "breaked-shell", "history", "pwd", "time"] # only for line 455
 
 
 
@@ -237,7 +239,10 @@ def main():
         os.system("cls")
     if equal_ignore_case(cmd, "mkdir"):
         if len(args) == 1:
-            os.mkdir(upath(args[0]))
+            try:
+                os.mkdir(upath(args[0]))
+            except PermissionError:
+                print(f"mkdir: error: permision deined: {args[0]}")
         else:
             os.mkdir("New Folder")
     if equal_ignore_case(cmd, "editor"):
@@ -292,8 +297,21 @@ def main():
         else:
             print("cat: error: invaild arguments")
     if equal_ignore_case(cmd, "psmgr"):
-        processes:list
-        print([p for p in processes])
+        def psc(secs):
+            fmt = "%H:%M:%S"
+            return datetime.datetime.fromtimestamp(secs).strftime(fmt)
+        print("MemTotal: {}MB   MemFree: {}MB   Processor: {}%".format((psutil.virtual_memory().total/1024**2), (psutil.virtual_memory().free/1024**2), psutil.cpu_percent()))
+        for proc in psutil.process_iter():
+            try:
+                processName = proc.name()
+                processID = proc.pid
+                processMem = proc.memory_info().private / 1024**2
+                processStatus = proc.status()
+                processCPU = proc.cpu_percent()
+                processTime = psc(proc.create_time())
+                print("Name: ", processName , " PID: ", processID, " Memory: ", processMem, "MB ", " Status: ", processStatus, " CPU: ", processCPU, "% ", " Started: ", processTime)
+            except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+                continue
     if equal_ignore_case(cmd, "cmpf"):
         if len(args) == 3:
             if args[0] == "sha1":
@@ -429,10 +447,15 @@ def main():
             print(i)
     if equal_ignore_case(cmd, "pwd"):
         print(upath(os.getcwd()))
+    if equal_ignore_case(cmd, "time"):
+        print(datetime.datetime.now())
     if (cmd.capitalize() or not cmd.capitalize()) in list(map(lambda x: x.capitalize(), cmds)):
         history.append(cmd)
     # not case-sentesive
     if not cmd.capitalize() in list(map(lambda x: x.capitalize(), cmds)):
+        # try:
+        #     print(subprocess.Popen(cmd, stdin=subprocess.DEVNULL, stderr=subprocess.STDOUT).stdout)
+        # except:
         print(f"rsh: {cmd}: command not found")
     
 
