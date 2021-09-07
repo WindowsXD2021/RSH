@@ -20,3 +20,4 @@ Commands:
 - breaked-shell
 - history
 - pwd
+- time
